@@ -1,0 +1,14 @@
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Shop.Application.Services.ProductService.Command.Dto
+{
+    public record EditProductDto
+    {
+        public long Id { get; set; }
+        public string Description { get; set; }
+        public IFormFile? ImageFile { get; set; }
+        public double Price { get; set; }
+        public int inventory { get; set; }
+        public long CategoryId { get; set; }
+    }
+}
