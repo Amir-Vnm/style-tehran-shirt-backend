@@ -14,7 +14,6 @@ namespace Shop.Application.Services.ProductService.Command
         {
             try
             {
-
                 if (!request.ImageFile.FileName.IsValidImageFile())
                 {
                     return new ApiResult
@@ -23,17 +22,20 @@ namespace Shop.Application.Services.ProductService.Command
                         Message = "فایل ورودی فرمت نامعتبری دارد"
                     };
                 }
-                var imagename = await request.ImageFile.SaveFile(ImageConstants.ProductImageAddress);
-                var Product = new Product()
+
+                var imageName = await request.ImageFile.SaveFile(ImageConstants.ProductImageAddress);
+
+                var product = new Product()
                 {
                     CategoryId = request.CategoryId,
                     CreateAt = DateTime.Now,
                     Description = request.Description,
                     Price = request.Price,
                     inventory = request.inventory,
-                    ImageUrl = imagename
+                    ImageUrl = $"Product/{imageName}"
                 };
-                await _context.Products.AddAsync(Product);
+
+                await _context.Products.AddAsync(product);
                 await _context.SaveChangesAsync();
 
                 return new ApiResult
@@ -79,7 +81,7 @@ namespace Shop.Application.Services.ProductService.Command
                         Description = item.Description,
                         Price = item.Price,
                         inventory = item.inventory,
-                        ImageUrl = imageName
+                        ImageUrl = $"Product/{imageName}"
                     });
                 }
 
@@ -103,39 +105,6 @@ namespace Shop.Application.Services.ProductService.Command
             }
         }
 
-        public async Task<ApiResult> Delete(long id)
-        {
-            try
-            {
-                var product = await _context.Products.FindAsync(id);
-                if (product is null)
-                {
-                    return new ApiResult
-                    {
-                        StatusCode = HttpStatusCode.NotFound,
-                        Message = "موردی یاقت نشد"
-                    };
-                }
-                product.IsDelete = true;
-                product.DeleteAt = DateTime.Now;
-                await _context.SaveChangesAsync();
-
-                return new ApiResult
-                {
-                    IsSuccess = true,
-                    StatusCode = HttpStatusCode.OK
-                };
-            }
-            catch (Exception)
-            {
-                return new ApiResult
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Message = "سرور در دسترس نیست"
-                };
-            }
-        }
-
         public async Task<ApiResult> Edit(EditProductDto request)
         {
             try
@@ -146,9 +115,10 @@ namespace Shop.Application.Services.ProductService.Command
                     return new ApiResult
                     {
                         StatusCode = HttpStatusCode.NotFound,
-                        Message = "موردی یاقت نشد"
+                        Message = "موردی یافت نشد"
                     };
                 }
+
                 product.UpdateAt = DateTime.Now;
                 product.Description = request.Description;
                 product.CategoryId = request.CategoryId;
@@ -166,16 +136,16 @@ namespace Shop.Application.Services.ProductService.Command
                         };
                     }
 
-                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), ImageConstants.ProductImageAddress, product.ImageUrl);
-
+                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", product.ImageUrl);
                     if (File.Exists(oldImagePath))
                     {
                         File.Delete(oldImagePath);
                     }
 
                     var newImageName = await request.ImageFile.SaveFile(ImageConstants.ProductImageAddress);
-                    product.ImageUrl = newImageName;
+                    product.ImageUrl = $"Product/{newImageName}";
                 }
+
                 await _context.SaveChangesAsync();
 
                 return new ApiResult
@@ -183,6 +153,51 @@ namespace Shop.Application.Services.ProductService.Command
                     IsSuccess = true,
                     StatusCode = HttpStatusCode.OK,
                     Message = "محصول با موفقیت بروز رسانی شد"
+                };
+            }
+            catch (Exception)
+            {
+                return new ApiResult
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Message = "سرور در دسترس نیست"
+                };
+            }
+        }
+
+        public async Task<ApiResult> Delete(long id)
+        {
+            try
+            {
+                var product = await _context.Products.FindAsync(id);
+                if (product is null)
+                {
+                    return new ApiResult
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "موردی یافت نشد"
+                    };
+                }
+
+                // حذف فایل فیزیکی محصول
+                if (!string.IsNullOrEmpty(product.ImageUrl))
+                {
+                    var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", product.ImageUrl);
+                    if (File.Exists(imagePath))
+                    {
+                        File.Delete(imagePath);
+                    }
+                }
+
+                product.IsDelete = true;
+                product.DeleteAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+
+                return new ApiResult
+                {
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "محصول حذف شد"
                 };
             }
             catch (Exception)

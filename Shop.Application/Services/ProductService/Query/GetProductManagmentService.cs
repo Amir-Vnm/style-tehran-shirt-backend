@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Shop.Application.Interface;
 using Shop.Application.Services.ProductService.Query.Dto;
-using Shop.Common.Constants;
 using Shop.Common.Dto;
 using System.Net;
 
@@ -19,15 +18,17 @@ namespace Shop.Application.Services.ProductService.Query
                     return new ApiResult<ProductDto>
                     {
                         StatusCode = HttpStatusCode.NotFound,
-                        Message = "موردی یاقت نشد"
+                        Message = "موردی یافت نشد"
                     };
                 }
+
                 var result = new ProductDto
                 {
                     CategoryId = product.CategoryId,
                     Description = product.Description,
                     Id = product.Id,
-                    ImageFile = string.Format(ImageConstants.ProductImageAddress, product.ImageUrl),
+                    // 🔧 مسیر درست: پوشه Product
+                    ImageFile = $"Product/{product.ImageUrl}",
                     inventory = product.inventory,
                     Price = product.Price
                 };
@@ -36,16 +37,16 @@ namespace Shop.Application.Services.ProductService.Query
                 {
                     IsSuccess = true,
                     StatusCode = HttpStatusCode.OK,
-                    Data = result,
+                    Data = result
                 };
             }
             catch (Exception)
             {
                 return new ApiResult<ProductDto>
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     StatusCode = HttpStatusCode.InternalServerError,
-                    Message = "محصول با موفقیت اضافه شد"
+                    Message = "خطا در دریافت محصول"
                 };
             }
         }
@@ -59,10 +60,12 @@ namespace Shop.Application.Services.ProductService.Query
                     Id = s.Id,
                     CategoryId = s.CategoryId,
                     Description = s.Description,
-                    ImageFile = string.Format(ImageConstants.ProductImageAddress, s.ImageUrl),
+                    // 🔧 مسیر درست: پوشه Product
+                    ImageFile = $"Product/{s.ImageUrl}",
                     inventory = s.inventory,
                     Price = s.Price
                 }).ToListAsync();
+
                 return new ApiResult<List<ProductDto>>
                 {
                     Data = products,
@@ -74,9 +77,9 @@ namespace Shop.Application.Services.ProductService.Query
             {
                 return new ApiResult<List<ProductDto>>
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     StatusCode = HttpStatusCode.InternalServerError,
-                    Message = "محصول با موفقیت اضافه شد"
+                    Message = "خطا در دریافت لیست محصولات"
                 };
             }
         }
@@ -85,15 +88,17 @@ namespace Shop.Application.Services.ProductService.Query
         {
             try
             {
-                var result = await _context.Products.Where(p => p.CategoryId == categoryId)
+                var result = await _context.Products
+                    .Where(p => p.CategoryId == categoryId)
                     .Select(s => new ProductDto
                     {
                         CategoryId = s.CategoryId,
                         Description = s.Description,
                         Id = s.Id,
-                        ImageFile = string.Format(ImageConstants.ProductImageAddress, s.ImageUrl),
+                        // 🔧 مسیر درست: پوشه Product
+                        ImageFile = $"Product/{s.ImageUrl}",
                         inventory = s.inventory,
-                        Price = s.inventory
+                        Price = s.Price
                     }).ToListAsync();
 
                 return new ApiResult<List<ProductDto>>
@@ -107,9 +112,9 @@ namespace Shop.Application.Services.ProductService.Query
             {
                 return new ApiResult<List<ProductDto>>
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     StatusCode = HttpStatusCode.InternalServerError,
-                    Message = "محصول با موفقیت اضافه شد"
+                    Message = "خطا در دریافت محصولات دسته‌بندی"
                 };
             }
         }

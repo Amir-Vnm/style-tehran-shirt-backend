@@ -11,7 +11,7 @@ namespace Shop.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-            var result =await product.GetProductManagmentService.GetProducts();
+            var result = await product.GetProductManagmentService.GetProducts();
             return StatusCode((int)result.StatusCode, result);
         }
 
@@ -22,8 +22,9 @@ namespace Shop.API.Controllers
             return StatusCode((int)result.StatusCode, result);
         }
 
-        [HttpGet("{categoryId}")]
-        public async Task<ActionResult> Get(long categoryId)
+        // ✅ مسیر اصلاح‌شده برای گرفتن محصولات بر اساس دسته‌بندی
+        [HttpGet("ByCategory/{categoryId}")]
+        public async Task<ActionResult> GetByCategory(long categoryId)
         {
             var result = await product.GetProductManagmentService.GetProducts(categoryId);
             return StatusCode((int)result.StatusCode, result);

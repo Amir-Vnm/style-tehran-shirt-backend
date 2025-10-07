@@ -2,7 +2,7 @@
 
 namespace Shop.Application.Services.CategoryService.Command.Dto
 {
-    public record EditCategoryDto
+    public class EditCategoryDto
     {
         public long Id { get; set; }
         public IFormFile? ImageFile { get; set; }

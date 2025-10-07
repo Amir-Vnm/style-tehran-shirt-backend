@@ -19,16 +19,19 @@ namespace Shop.Application.Services.CategoryService.Command
                     return new ApiResult
                     {
                         StatusCode = HttpStatusCode.BadRequest,
-                        Message = "فایل ورودی فرمت نامعتبری دارد"
+                        Message = "فرمت فایل تصویر نامعتبر است"
                     };
                 }
-                var imagename = await request.ImageFile.SaveFile(ImageConstants.CategoryImageAddress);
+
+                var imageName = await request.ImageFile.SaveFile(ImageConstants.CategoryImageAddress);
+
                 var category = new Category
                 {
                     CreateAt = DateTime.Now,
-                    ImageUrl = imagename,
-                    Name = request.Name,
+                    ImageUrl = imageName,
+                    Name = request.Name
                 };
+
                 Insert<Category>(category);
                 await Save();
 
@@ -36,7 +39,7 @@ namespace Shop.Application.Services.CategoryService.Command
                 {
                     IsSuccess = true,
                     StatusCode = HttpStatusCode.Created,
-                    Message = "دسته بندی با موفقیت اضافه شد"
+                    Message = "دسته‌بندی با موفقیت اضافه شد"
                 };
             }
             catch (Exception)
@@ -44,73 +47,109 @@ namespace Shop.Application.Services.CategoryService.Command
                 return new ApiResult
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
-                    Message = "سرور در دسترس نیست"
+                    Message = "خطا در سرور"
                 };
             }
         }
 
         public async Task<ApiResult> DeleteCategory(long id)
         {
-            var category =await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.FindAsync(id);
             if (category is null)
             {
                 return new ApiResult
                 {
                     StatusCode = HttpStatusCode.NotFound,
-                    Message = "موردی یاقت نشد"
+                    Message = "دسته‌بندی یافت نشد"
                 };
             }
+
+            // حذف تصویر دسته‌بندی
+            if (!string.IsNullOrEmpty(category.ImageUrl))
+            {
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/CategoryImage", category.ImageUrl);
+                if (File.Exists(imagePath))
+                {
+                    File.Delete(imagePath);
+                }
+            }
+
+            // حذف محصولات مرتبط
+            var products = _context.Products.Where(p => p.CategoryId == id).ToList();
+            foreach (var product in products)
+            {
+                if (!string.IsNullOrEmpty(product.ImageUrl))
+                {
+                    var productImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/ProductImage", product.ImageUrl);
+                    if (File.Exists(productImagePath))
+                    {
+                        File.Delete(productImagePath);
+                    }
+                }
+            }
+            _context.Products.RemoveRange(products);
+
+            // حذف نرم دسته‌بندی
             category.IsDelete = true;
             category.DeleteAt = DateTime.Now;
-           await _context.SaveChangesAsync();
+
+            await _context.SaveChangesAsync();
+
             return new ApiResult
             {
                 IsSuccess = true,
                 StatusCode = HttpStatusCode.OK,
-                Message = "دسته بندی حدف شد"
+                Message = "دسته‌بندی و محصولات مرتبط حذف شدند"
             };
         }
 
         public async Task<ApiResult> EditCategory(EditCategoryDto request)
         {
-            var category =await _context.Categories.FindAsync(request.Id);
+            var category = await _context.Categories.FindAsync(request.Id);
             if (category is null)
             {
                 return new ApiResult
                 {
                     StatusCode = HttpStatusCode.NotFound,
-                    Message = "موردی یافت نشد"
+                    Message = "دسته‌بندی یافت نشد"
                 };
             }
+
             category.Name = request.Name;
 
-            if (request.ImageFile != null && request.ImageFile.Length > 0)
+            if (request.ImageFile is { Length: > 0 })
             {
                 if (!request.ImageFile.FileName.IsValidImageFile())
                 {
                     return new ApiResult
                     {
                         StatusCode = HttpStatusCode.BadRequest,
-                        Message = "فایل ورودی فرمت نامعتبری دارد"
+                        Message = "فرمت فایل تصویر نامعتبر است"
                     };
                 }
 
-                var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/CategoryImage", category.ImageUrl);
-
-                if (File.Exists(oldImagePath))
+                // حذف تصویر قبلی
+                if (!string.IsNullOrEmpty(category.ImageUrl))
                 {
-                    File.Delete(oldImagePath);
+                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/CategoryImage", category.ImageUrl);
+                    if (File.Exists(oldImagePath))
+                    {
+                        File.Delete(oldImagePath);
+                    }
                 }
 
-                var newImageName = await request.ImageFile.SaveFile("wwwroot/CategoryImage");
+                // ذخیره تصویر جدید
+                var newImageName = await request.ImageFile.SaveFile(ImageConstants.CategoryImageAddress);
                 category.ImageUrl = newImageName;
             }
+
             await _context.SaveChangesAsync();
+
             return new ApiResult
             {
                 IsSuccess = true,
                 StatusCode = HttpStatusCode.OK,
-                Message = "دسته بندی با موقیت به روز شد"
+                Message = "دسته‌بندی با موفقیت به‌روز شد"
             };
         }
     }

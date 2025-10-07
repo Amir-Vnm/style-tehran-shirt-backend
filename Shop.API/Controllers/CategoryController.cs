@@ -12,71 +12,38 @@ namespace Shop.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-            try
-            {
-                var result=await categoryFacade.GetCategorymanagmentServices.Get();
-                return StatusCode((int)result.StatusCode, result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = e.Message });
-            }
+            var result = await categoryFacade.GetCategorymanagmentServices.Get();
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult> Get(long id)
         {
-            try
-            {
-                var result = await categoryFacade.GetCategorymanagmentServices.Get(id);
-                return StatusCode((int)result.StatusCode, result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = e.Message });
-            }
+            var result = await categoryFacade.GetCategorymanagmentServices.Get(id);
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] AddCategoryDto request)
         {
-            try
-            {
-                var result = await categoryFacade.CategoryManagmentServices.AddCategory(request);
-                return StatusCode((int)result.StatusCode, result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = e.Message });
-            }
+            var result = await categoryFacade.CategoryManagmentServices.AddCategory(request);
+            return StatusCode((int)result.StatusCode, result);
         }
 
-        [HttpPut]
-        public async Task<ActionResult> Edit([FromForm] EditCategoryDto request)
+        // ✅ اصلاح مسیر PUT با دریافت id از URL
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Edit(long id, [FromForm] EditCategoryDto request)
         {
-            try
-            {
-                var result = await categoryFacade.CategoryManagmentServices.EditCategory(request);
-                return StatusCode((int)result.StatusCode, result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = e.Message });
-            }
+            request.Id = id; // تنظیم id از URL
+            var result = await categoryFacade.CategoryManagmentServices.EditCategory(request);
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(long id)
         {
-            try
-            {
-                var result = await categoryFacade.CategoryManagmentServices.DeleteCategory(id);
-                return StatusCode((int)result.StatusCode, result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = e.Message });
-            }
+            var result = await categoryFacade.CategoryManagmentServices.DeleteCategory(id);
+            return StatusCode((int)result.StatusCode, result);
         }
     }
 }
