@@ -19,16 +19,21 @@ builder.Services.AddScoped<IDataBaseContext, DataBaseContext>();
 builder.Services.AddScoped<ICategoryFacade, CategoryFacade>();
 builder.Services.AddScoped<IProductFacade, ProductFacade>();
 
-// CORS برای فرانت
+
+// CORS برای فرانت لوکال و دیپلوی‌شده
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(
+            "http://localhost:5173",
+            "https://sstyle-tehran-shirt-frontend.onrender.com"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
