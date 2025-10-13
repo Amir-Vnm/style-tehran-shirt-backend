@@ -30,7 +30,9 @@ builder.Services.AddCors(options =>
             "https://sstyle-tehran-shirt-frontend.onrender.com"
         )
         .AllowAnyHeader()
-        .AllowAnyMethod();
+        .AllowAnyMethod()
+        .AllowCredentials()   
+            ;
     });
 });
 
