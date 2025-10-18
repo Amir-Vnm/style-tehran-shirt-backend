@@ -30,6 +30,7 @@ builder.Services.AddCors(options =>
             "https://style-tehran-shirt-backend.onrender.com"
         )
         .AllowAnyHeader()
+         .WithHeaders("Content-Type", "Authorization")   
         .AllowAnyMethod();
     });
 });
