@@ -8,7 +8,7 @@ using Shop.Persistance.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 📦 اتصال به دیتابیس
+// 📦 Database
 var connectionString = builder.Configuration.GetConnectionString("DbConnection")
     ?? throw new InvalidOperationException("Connection string 'DbConnection' not found.");
 
@@ -19,18 +19,18 @@ builder.Services.AddScoped<IDataBaseContext, DataBaseContext>();
 builder.Services.AddScoped<ICategoryFacade, CategoryFacade>();
 builder.Services.AddScoped<IProductFacade, ProductFacade>();
 
-// ✅ تنظیم CORS برای React frontend و localhost
+// ✅ تنظیم CORS به‌صورت مطمئن (Render + localhost)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "https://sstyle-tehran-shirt-frontend.onrender.com", // فرانت واقعی
-            "http://localhost:5173" // برای تست لوکال
+            "https://sstyle-tehran-shirt-frontend.onrender.com",
+            "http://localhost:5173"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowCredentials(); // اگه از کوکی/توکن استفاده می‌کنی لازمه
+        .AllowCredentials();
     });
 });
 
@@ -40,34 +40,26 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ✅ ترتیب دقیق middlewareها (خیلی مهم!)
-app.UseCors("AllowFrontend"); // باید قبل از بقیه باشه
+// ⚠️ ترتیب در .NET 8 خیلی مهمه
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
+
+// ✅ از اینجا شروع کن
+app.UseRouting();
+
+// ✅ CORS بعد از UseRouting ولی قبل از UseAuthorization
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
+
 app.MapControllers();
 
-// ✅ فایل‌های استاتیک در آخر
+// ✅ Static files بعد از MapControllers
 app.UseStaticFiles();
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "CategoryImage")),
-    RequestPath = "/CategoryImage"
-});
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Product")),
-    RequestPath = "/Product"
-});
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "wwwroot/images")),
-    RequestPath = "/images"
-});
 
 app.Run();
