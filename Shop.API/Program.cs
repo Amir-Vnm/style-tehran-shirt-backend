@@ -8,9 +8,9 @@ using Shop.Persistance.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 📦 اتصال به دیتابیس
 var connectionString = builder.Configuration.GetConnectionString("DbConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    ?? throw new InvalidOperationException("Connection string 'DbConnection' not found.");
 
 builder.Services.AddDbContext<DataBaseContext>(options =>
     options.UseSqlServer(connectionString));
@@ -19,19 +19,18 @@ builder.Services.AddScoped<IDataBaseContext, DataBaseContext>();
 builder.Services.AddScoped<ICategoryFacade, CategoryFacade>();
 builder.Services.AddScoped<IProductFacade, ProductFacade>();
 
-// ✅ CORS برای فرانت لوکال و دیپلوی‌شده
+// ✅ تنظیم CORS برای React frontend و localhost
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-             "http://localhost:5173",
-            "https://sstyle-tehran-shirt-frontend.onrender.com",
-            "https://style-tehran-shirt-backend.onrender.com"
+            "https://sstyle-tehran-shirt-frontend.onrender.com", // فرانت واقعی
+            "http://localhost:5173" // برای تست لوکال
         )
         .AllowAnyHeader()
-         .WithHeaders("Content-Type", "Authorization")   
-        .AllowAnyMethod();
+        .AllowAnyMethod()
+        .AllowCredentials(); // اگه از کوکی/توکن استفاده می‌کنی لازمه
     });
 });
 
@@ -41,21 +40,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ✅ فعال‌سازی CORS قبل از هر چیزی
-app.UseCors("AllowFrontend");
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// ✅ ترتیب دقیق middlewareها (خیلی مهم!)
+app.UseCors("AllowFrontend"); // باید قبل از بقیه باشه
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// ✅ فعال‌سازی مسیرهای استاتیک
-app.UseStaticFiles(); // wwwroot کلی
+// ✅ فایل‌های استاتیک در آخر
+app.UseStaticFiles();
 
 app.UseStaticFiles(new StaticFileOptions
 {
