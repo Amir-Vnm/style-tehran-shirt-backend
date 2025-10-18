@@ -8,7 +8,7 @@ using Shop.Persistance.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 📦 Database
+// Database
 var connectionString = builder.Configuration.GetConnectionString("DbConnection")
     ?? throw new InvalidOperationException("Connection string 'DbConnection' not found.");
 
@@ -19,18 +19,16 @@ builder.Services.AddScoped<IDataBaseContext, DataBaseContext>();
 builder.Services.AddScoped<ICategoryFacade, CategoryFacade>();
 builder.Services.AddScoped<IProductFacade, ProductFacade>();
 
-// ✅ تنظیم CORS به‌صورت مطمئن (Render + localhost)
+// CORS (موقتا برای دیباگ AllowAnyOrigin تا ببینیم header اضافه میشه یا نه)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "https://sstyle-tehran-shirt-frontend.onrender.com",
-            "http://localhost:5173"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        policy
+            //.WithOrigins("https://sstyle-tehran-shirt-frontend.onrender.com", "http://localhost:5173")
+            .AllowAnyOrigin()   // موقت برای تست — بعد از حل شدن، به origins محدود کن
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -40,26 +38,44 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ⚠️ ترتیب در .NET 8 خیلی مهمه
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// app.UseHttpsRedirection();
-
-// ✅ از اینجا شروع کن
+// *** ترتیب مهم است ***
 app.UseRouting();
 
-// ✅ CORS بعد از UseRouting ولی قبل از UseAuthorization
+// CORS بعد از UseRouting و قبل از Authorization/MapControllers
 app.UseCors("AllowFrontend");
+
+// فعلاً HttpsRedirection را غیرفعال کن (Render خود HTTPS را مدیریت می‌کند)
+ // app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseSwagger();      // موقت: Swagger فعال برای همه محیط‌ها
+app.UseSwaggerUI();    // موقت: برای دیباگ
+
 app.MapControllers();
 
-// ✅ Static files بعد از MapControllers
+// static files بعد از MapControllers
 app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "CategoryImage")),
+    RequestPath = "/CategoryImage"
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Product")),
+    RequestPath = "/Product"
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "wwwroot/images")),
+    RequestPath = "/images"
+});
 
 app.Run();
