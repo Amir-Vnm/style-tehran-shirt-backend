@@ -77,5 +77,10 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(builder.Environment.ContentRootPath, "wwwroot/images")),
     RequestPath = "/images"
 });
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DataBaseContext>();
+    db.Database.EnsureCreated(); // جدول‌ها را می‌سازد اگر وجود نداشته باشند
+}
 
 app.Run();
