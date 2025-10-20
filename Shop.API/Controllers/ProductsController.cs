@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Shop.Application.Interface.Facade;
 using Shop.Application.Services.ProductService.Command.Dto;
 
@@ -16,13 +16,12 @@ namespace Shop.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Add([FromForm] AddProductDto request)
+        public async Task<ActionResult> Add([FromForm] AddProductDto request, [FromServices] CloudinaryService cloudinary)
         {
-            var result = await product.ProductManagmentServices.Add(request);
+            var result = await product.ProductManagmentServices.Add(request, cloudinary);
             return StatusCode((int)result.StatusCode, result);
         }
 
-        // ✅ مسیر اصلاح‌شده برای گرفتن محصولات بر اساس دسته‌بندی
         [HttpGet("ByCategory/{categoryId}")]
         public async Task<ActionResult> GetByCategory(long categoryId)
         {
