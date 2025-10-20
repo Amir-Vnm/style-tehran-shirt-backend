@@ -18,6 +18,8 @@ builder.Services.AddDbContext<DataBaseContext>(options =>
 builder.Services.AddScoped<IDataBaseContext, DataBaseContext>();
 builder.Services.AddScoped<ICategoryFacade, CategoryFacade>();
 builder.Services.AddScoped<IProductFacade, ProductFacade>();
+builder.Services.AddSingleton<CloudinaryService>();
+
 
 // CORS (موقتا برای دیباگ AllowAnyOrigin تا ببینیم header اضافه میشه یا نه)
 builder.Services.AddCors(options =>
